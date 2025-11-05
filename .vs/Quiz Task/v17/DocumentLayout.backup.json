@@ -1,0 +1,85 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\stroz\\Documents\\Code\\Quiz Task\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2E95999E-E1FA-4345-9A5F-245D6847C350}|Quiz Task.csproj|c:\\users\\stroz\\documents\\code\\quiz task\\dataaccess\\mongousersessionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2E95999E-E1FA-4345-9A5F-245D6847C350}|Quiz Task.csproj|solutionrelative:dataaccess\\mongousersessionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2E95999E-E1FA-4345-9A5F-245D6847C350}|Quiz Task.csproj|c:\\users\\stroz\\documents\\code\\quiz task\\dataaccess\\mongotestrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2E95999E-E1FA-4345-9A5F-245D6847C350}|Quiz Task.csproj|solutionrelative:dataaccess\\mongotestrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2E95999E-E1FA-4345-9A5F-245D6847C350}|Quiz Task.csproj|c:\\users\\stroz\\documents\\code\\quiz task\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2E95999E-E1FA-4345-9A5F-245D6847C350}|Quiz Task.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 300,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MongoUserSessionRepository.cs",
+              "DocumentMoniker": "C:\\Users\\stroz\\Documents\\Code\\Quiz Task\\DataAccess\\MongoUserSessionRepository.cs",
+              "RelativeDocumentMoniker": "DataAccess\\MongoUserSessionRepository.cs",
+              "ToolTip": "C:\\Users\\stroz\\Documents\\Code\\Quiz Task\\DataAccess\\MongoUserSessionRepository.cs",
+              "RelativeToolTip": "DataAccess\\MongoUserSessionRepository.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAUwEYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-05T22:18:19.73Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MongoTestRepository.cs",
+              "DocumentMoniker": "C:\\Users\\stroz\\Documents\\Code\\Quiz Task\\DataAccess\\MongoTestRepository.cs",
+              "RelativeDocumentMoniker": "DataAccess\\MongoTestRepository.cs",
+              "ToolTip": "C:\\Users\\stroz\\Documents\\Code\\Quiz Task\\DataAccess\\MongoTestRepository.cs",
+              "RelativeToolTip": "DataAccess\\MongoTestRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-05T22:17:56.82Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\stroz\\Documents\\Code\\Quiz Task\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\stroz\\Documents\\Code\\Quiz Task\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC8AAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-05T22:17:41.478Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 100,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

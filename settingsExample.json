@@ -1,0 +1,18 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+
+  //MONGODB
+  "MongoDbSettings": {
+    //Atlas connection string
+    "ConnectionString": "CONNECTIONSTRING",
+
+    //DB name
+    "DatabaseName": "DBNAME"
+  }
+}

@@ -1,0 +1,87 @@
+﻿@* @model System.Collections.Generic.IReadOnlyList<Quiz_Task.Models.Test> *@
+@model IReadOnlyList<Quiz_Task.Models.Test>
+
+@{
+    ViewData["Title"] = "Quiz List (Homepage)";
+}
+
+<h1>Quiz Task - Homepage</h1>
+<h2>Enter your name and choose a test</h2>
+
+<form id="start-form">
+    <div>
+        <label for="username">Enter your name:</label>
+        <input type="text" id="username" name="username" required>
+        <div id="username-error" style="color: red; display: none;">User name is required.</div>
+    </div>
+
+    <div>
+        <label for="test-select">Choose a test:</label>
+        <select id="test-select" name="testId" required>
+            <option value="">-- Select a Test --</option>
+            @* Iterate over the Model (the list of tests passed from the controller) *@
+            @foreach (var test in Model)
+            {
+                <option value="@test.Id">@test.Title (@test.TotalQuestions questions)</option>
+            }
+        </select>
+        <div id="test-error" style="color: red; display: none;">A test must be selected.</div>
+    </div>
+
+    <button type="submit">Start</button>
+</form>
+
+@* --- The JavaScript part to handle form submission and API calls --- *
+@* This JS must call your POST /api/test/start-session endpoint *@
+<script>
+    document.getElementById('start-form').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Stop default form submission
+
+        const username = document.getElementById('username').value.trim();
+        const testId = document.getElementById('test-select').value;
+        let isValid = true;
+
+        // Basic client-side validation
+        if (!username) {
+            document.getElementById('username-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('username-error').style.display = 'none';
+        }
+
+        if (!testId) {
+            document.getElementById('test-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('test-error').style.display = 'none';
+        }
+
+        if (!isValid) return;
+
+        // API Call to POST /test/start-session
+        try {
+            const response = await fetch('/api/test/start-session', { // Assumes you kept the /api/ prefix for the POST
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userName: username, testId: testId })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                const sessionId = result.data;
+                // SUCCESS: Redirect the user to the first question view
+                // NOTE: The 'question' part of the URL assumes you'll build a question view later.
+                window.location.href = `/test/session/${sessionId}/question`;
+            } else {
+                // Handle API error messages
+                alert('Failed to start session: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Network or system error:', error);
+            alert('An unexpected error occurred while starting the session.');
+        }
+    });
+</script>
