@@ -1,5 +1,7 @@
 ﻿//Author: Stefano Strozzo <strozzostefano@gmail.com>
 
+using MongoDB.Bson.Serialization.Attributes;
+
 namespace Quiz_Task.Models
 {
     /// <summary>
@@ -10,7 +12,8 @@ namespace Quiz_Task.Models
         /// <summary>
         /// ID dell'entità, utilizzato all'interno di una domanda.
         /// </summary>
-        public string Id { get; init; } = default!;
+        [BsonElement("Id")]
+        public string Id { get; init; } = string.Empty;
 
         /// <summary>
         /// Testo dell'opzione di risposta.

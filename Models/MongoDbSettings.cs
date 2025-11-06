@@ -16,5 +16,9 @@ namespace Quiz_Task.Models
         /// Database name within the MongoDB server
         /// </summary>
         public string DatabaseName { get; set; }
+
+        public string TestsCollectionName { get; set; } = "Tests";
+        public string QuestionsCollectionName { get; set; } = "Questions";
+        public string UserSessionsCollectionName { get; set; } = "UserSessions";
     }
 }

@@ -20,6 +20,8 @@ namespace Quiz_Task.Models
         /// <summary>
         /// ID del Test a cui appartiene la domanda.
         /// </summary>
+        /// [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
         public string TestId { get; init; } = default!;
 
         /// <summary>

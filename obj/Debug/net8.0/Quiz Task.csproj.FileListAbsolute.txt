@@ -37,3 +37,5 @@ C:\Users\stroz\Documents\Code\Quiz Task\obj\Debug\net8.0\Quiz Task.genruntimecon
 C:\Users\stroz\Documents\Code\Quiz Task\obj\Debug\net8.0\ref\Quiz Task.dll
 C:\Users\stroz\Documents\Code\Quiz Task\obj\Debug\net8.0\Quiz Task.RazorAssemblyInfo.cache
 C:\Users\stroz\Documents\Code\Quiz Task\obj\Debug\net8.0\Quiz Task.RazorAssemblyInfo.cs
+C:\Users\stroz\Documents\Code\Quiz Task\bin\Debug\net8.0\settingsExample.json
+C:\Users\stroz\Documents\Code\Quiz Task\obj\Debug\net8.0\Quiz Task.sourcelink.json

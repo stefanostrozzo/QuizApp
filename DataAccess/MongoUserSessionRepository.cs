@@ -23,7 +23,8 @@ namespace Quiz_Task.DataAccess
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
 
-            _sessions = database.GetCollection<UserSession>("UserSessions");
+            var userSessionsCollectionName = settings.UserSessionsCollectionName ?? "UserSession";
+            _sessions = database.GetCollection<UserSession>(userSessionsCollectionName);
 
             //Create Indexes for performance optimization (as per project requirement)
             var indexKeysUserTest = Builders<UserSession>.IndexKeys

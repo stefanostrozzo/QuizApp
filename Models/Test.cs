@@ -23,11 +23,6 @@ namespace Quiz_Task.Models
         public string Title { get; init; } = default!;
 
         /// <summary>
-        /// Descrizione del Test.
-        /// </summary>
-        public string Description { get; init; } = default!;
-
-        /// <summary>
         /// Numero totale di domande nel test.
         /// </summary>
         public int TotalQuestions { get; init; }

@@ -1,0 +1,378 @@
+﻿@model Quiz_Task.Controllers.Utils.QuestionDto
+
+@{
+    ViewData["Title"] = $"Question {Model.SequenceNumber} of {Model.TotalQuestions}";
+}
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #D3D3D3 0%, #2575fc 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .quiz-container {
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 600px;
+        padding: 40px 30px;
+        text-align: center;
+    }
+
+    .quiz-header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .quiz-header h2 {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background-color: #e1e5ee;
+        border-radius: 4px;
+        margin: 25px 0;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+
+    .options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 30px 0;
+    }
+
+    .option-card {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        border: 2px solid #e1e5ee;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .option-card:hover {
+            border-color: #4d7cfe;
+            background-color: #f0f4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(77, 124, 254, 0.15);
+        }
+
+        .option-card input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+        }
+
+        .option-card span {
+            flex: 1;
+            text-align: left;
+            font-size: 16px;
+            color: #444;
+            font-weight: 500;
+        }
+
+    #option-error {
+        color: #e74c3c;
+        font-size: 14px;
+        margin: 15px 0;
+        padding: 10px;
+        background-color: #ffeaea;
+        border-radius: 6px;
+        border: 1px solid #ffcdd2;
+        display: none;
+    }
+
+    .btn-submit {
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 16px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 117, 252, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    .question-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #6a11cb;
+    }
+
+    .progress-text {
+        color: #666;
+        font-size: 14px;
+        margin-top: 10px;
+        font-weight: 500;
+    }
+
+    @@media (max-width: 576px) {
+        .quiz-container {
+            padding: 30px 20px;
+        }
+
+        .quiz-header h1 {
+            font-size: 24px;
+        }
+
+        .quiz-header h2 {
+            font-size: 18px;
+        }
+
+        .option-card {
+            padding: 14px 16px;
+        }
+
+            .option-card span {
+                font-size: 15px;
+            }
+    }
+</style>
+
+<div class="quiz-container">
+    <div class="quiz-header">
+        <div class="question-icon">❓</div>
+        <h1>@ViewData["Title"]</h1>
+        <h2>@Model.Text</h2>
+    </div>
+
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar-fill"
+             style="width: @((int)(((double)Model.SequenceNumber / Model.TotalQuestions) * 100))%;"></div>
+    </div>
+    <div class="progress-text" id="progress-text">Question @Model.SequenceNumber of @Model.TotalQuestions</div>
+
+    <form id="answer-form" method="post" data-session-id="@ViewContext.RouteData.Values["sessionId"]"
+          data-question-id="@Model.Id"
+          data-current-sequence="@Model.SequenceNumber"
+          data-total-questions="@Model.TotalQuestions">
+
+        <input type="hidden" id="questionId" value="@Model.Id" />
+
+        <div class="options-list">
+            @foreach (var option in Model.Options)
+            {
+                <label class="option-card">
+                    <input type="radio" name="selectedOptionId" value="@option.Id" required>
+                    <span>@option.Text</span>
+                </label>
+            }
+        </div>
+
+        <div id="option-error">Please select an answer before continuing.</div>
+
+        <button type="submit" class="btn-submit" id="submit-answer-btn">Next Question</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const answerForm = document.getElementById('answer-form');
+        const submitButton = document.getElementById('submit-answer-btn');
+        const errorDiv = document.getElementById('option-error');
+
+        // Funzione per aggiornare la barra di progresso
+        function updateProgressBar(sequence, total) {
+            const progressBar = document.getElementById('progress-bar-fill');
+            const progressText = document.getElementById('progress-text');
+
+            if (progressBar && progressText && total > 0) {
+                // Calcola la percentuale di avanzamento
+                // Usiamo (sequence - 1) per il progresso VISIVO,
+                // ma manteniamo 'sequence' per la text. Manteniamo la logica originale.
+                const percentage = (sequence / total) * 100;
+                progressBar.style.width = percentage + '%';
+                progressText.textContent = `Question ${sequence} of ${total}`;
+            }
+        }
+
+        // Recupera i dati dal modello Razor
+        const currentSequence = parseInt(answerForm.getAttribute('data-current-sequence') || '0');
+        const totalQuestions = parseInt(answerForm.getAttribute('data-total-questions') || '0');
+        const sessionId = answerForm.getAttribute('data-session-id');
+
+        // Inizializza la barra di progresso all'avvio della pagina
+        updateProgressBar(currentSequence, totalQuestions);
+
+        // Aggiungi interattività alle opzioni
+        const optionCards = document.querySelectorAll('.option-card');
+        optionCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+
+                    // Rimuovi lo stile selezionato da tutte le card
+                    optionCards.forEach(c => {
+                        c.style.borderColor = '#e1e5ee';
+                        c.style.backgroundColor = '#f8f9fa';
+                    });
+
+                    // Applica lo stile selezionato alla card corrente
+                    this.style.borderColor = '#6a11cb';
+                    this.style.backgroundColor = '#f0f4ff';
+
+                    // Nascondi l'errore se visibile
+                    errorDiv.style.display = 'none';
+                }
+            });
+        });
+
+        answerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 1. VALIDAZIONE: Controlla se è stata selezionata un'opzione
+            const selectedOption = document.querySelector('input[name="selectedOptionId"]:checked');
+            if (!selectedOption) {
+                errorDiv.style.display = 'block';
+                return;
+            } else {
+                errorDiv.style.display = 'none';
+            }
+
+            // Disabilita il bottone e mostra lo stato di caricamento
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Submitting...';
+            submitButton.disabled = true;
+
+            // Prepara i dati da inviare
+            const questionId = answerForm.getAttribute('data-question-id');
+            const selectedOptionId = selectedOption.value;
+
+            console.log('Submitting answer:', { sessionId, questionId, selectedOptionId });
+
+            try {
+                // 2. CHIAMATA API: POST /Test/SubmitAnswer
+                const response = await fetch('/Test/SubmitAnswer', {
+                    // ... (metodo e headers invariati)
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        questionId: questionId,
+                        selectedOptionId: selectedOptionId
+                    })
+                });
+
+                console.log('Response status:', response.status);
+
+                // Gestione della risposta
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+
+                let result;
+                if (responseText) {
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        throw new Error('Invalid response from server');
+                    }
+                } else {
+                    throw new Error('Empty response from server');
+                }
+
+                // -------------------------------------------------------------------
+                // CORREZIONE FONDAMENTALE: Accedi all'oggetto annidato 'value'
+                // -------------------------------------------------------------------
+                const apiResult = result.value;
+
+                if (response.ok && apiResult && apiResult.success) {
+                    // Successo: Ottiene la prossima azione dal campo 'data' interno
+                    const nextStep = apiResult.data; // <--- nextStep ottiene l'ID o 'RESULT'
+                    console.log('Next step:', nextStep);
+
+                    if (nextStep === 'RESULT') {
+                        // 3a. FINE DEL TEST: Reindirizza alla pagina dei risultati
+                        console.log('Redirecting to results page');
+                        window.location.href = `/Test/Result?sessionId=${sessionId}`;
+                    } else {
+                        // 3b. PROSSIMA DOMANDA: Reindirizza alla view della prossima domanda
+                        console.log('Redirecting to next question');
+                        // Usa la variabile 'nextStep'
+                        window.location.href = `/Test/Session/${sessionId}/Question/${nextStep}`;
+                    }
+
+                } else {
+                    // Gestione degli errori API (Usa apiResult per il messaggio corretto)
+                    const errorMessage = (apiResult && apiResult.message)
+                        ? apiResult.message
+                        : 'An unknown error occurred.';
+
+                    console.error('API Error:', errorMessage);
+                    alert('Failed to submit answer: ' + errorMessage);
+
+                    // Ripristina il bottone in caso di errore
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
+
+            } catch (error) {
+                console.error('Network or system error:', error);
+                alert('An unexpected error occurred while submitting the answer: ' + error.message);
+
+                // Ripristina il bottone in caso di errore
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
+        });
+
+        // Aggiungi alcuni effetti di focus per accessibilità
+        const radioInputs = document.querySelectorAll('input[type="radio"]');
+        radioInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.closest('.option-card').style.boxShadow = '0 0 0 3px rgba(77, 124, 254, 0.3)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.closest('.option-card').style.boxShadow = '';
+            });
+        });
+    });
+</script>

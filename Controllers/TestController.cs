@@ -105,14 +105,14 @@ namespace Quiz_Task.Controllers
         }
 
         // ----------------------------------------------------------------------
-        // 3. API: POST /Test/session/{sessionId}/answer (Logica API - Ritorna JSON)
+        // 3. API: POST /Test/SubmitAnswer (Logica API - Ritorna JSON)
         // ----------------------------------------------------------------------
 
         /// <summary>
         /// Records the user's answer for the current question and updates the session.
         /// </summary>
-        [HttpPost("session/{sessionId}/answer")]
-        public async Task<IActionResult> SubmitAnswer(string sessionId, [FromBody] SubmitAnswerRequest request, CancellationToken cancellationToken)
+        [HttpPost("SubmitAnswer")]
+        public async Task<IActionResult> SubmitAnswer([FromBody] SubmitAnswerRequest request, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -123,10 +123,10 @@ namespace Quiz_Task.Controllers
             try
             {
                 // 1. Recupera la sessione
-                var session = await _sessionRepository.GetSessionByIdAsync(sessionId, cancellationToken);
+                var session = await _sessionRepository.GetSessionByIdAsync(request.SessionId, cancellationToken);
                 if (session == null)
                 {
-                    return NotFound(Json(ApiResponse<bool>.Fail($"Session with ID '{sessionId}' not found.")));
+                    return NotFound(Json(ApiResponse<bool>.Fail($"Session with ID '{request.SessionId}' not found.")));
                 }
 
                 if (session.EndTime.HasValue)
@@ -140,11 +140,10 @@ namespace Quiz_Task.Controllers
                     return BadRequest(Json(ApiResponse<bool>.Fail($"Question with ID '{request.QuestionId}' has already been answered.")));
                 }
 
-                // 3. Recupera la domanda COMPLETA dal DB per la verifica (Usa il tipo nullable Question?)
+                // 3. Recupera la domanda COMPLETA dal DB per la verifica
                 Question? fullQuestion = await _testRepository.GetQuestionByIdAsync(request.QuestionId, cancellationToken);
                 if (fullQuestion == null)
                 {
-                    // RISOLTO ERRORE 3: La funzione GetQuestionByIdAsync è definita con Question? (nullable), gestiamo null qui.
                     return NotFound(Json(ApiResponse<bool>.Fail($"Question with ID '{request.QuestionId}' not found.")));
                 }
 
@@ -169,14 +168,42 @@ namespace Quiz_Task.Controllers
 
                 await _sessionRepository.UpdateSessionAsync(session, cancellationToken);
 
-                // 7. Restituisce il risultato
-                return Ok(Json(ApiResponse<bool>.Ok(isCorrect, "Answer submitted successfully.")));
+                // 7. Ottieni la prossima domanda o indica che il quiz è finito
+                var allQuestions = await _testRepository.GetQuestionsByTestIdAsync(session.TestId, cancellationToken);
+                var answeredQuestionIds = session.Answers.Select(a => a.QuestionId).ToHashSet();
+                var nextQuestion = allQuestions
+                    .Where(q => !answeredQuestionIds.Contains(q.Id))
+                    .OrderBy(q => q.Text)
+                    .FirstOrDefault();
+
+                string nextStep;
+                if (nextQuestion == null)
+                {
+                    // Quiz finito
+                    await FinalizeSession(session);
+                    nextStep = "RESULT";
+                }
+                else
+                {
+                    // Prossima domanda
+                    nextStep = nextQuestion.Id;
+                }
+
+                // 8. Restituisce il risultato con la prossima azione
+                return Ok(Json(ApiResponse<string>.Ok(nextStep, "Answer submitted successfully.")));
             }
             catch (Exception ex)
             {
                 return StatusCode(500, Json(ApiResponse<bool>.Fail("An internal server error occurred while submitting the answer.", new List<string> { ex.Message })));
             }
         }
+
+        // Assicurati che il record SubmitAnswerRequest includa SessionId
+        public record SubmitAnswerRequest(
+            string SessionId,
+            string QuestionId,
+            string SelectedOptionId
+        );
 
         // ----------------------------------------------------------------------
         // 4. API: GET /Test/session/{sessionId}/next-question (Logica API - Ritorna JSON)
@@ -232,6 +259,66 @@ namespace Quiz_Task.Controllers
             {
                 return StatusCode(500, Json(ApiResponse<QuestionDto>.Fail("An internal server error occurred while retrieving the next question.", new List<string> { ex.Message })));
             }
+        }
+
+        // ----------------------------------------------------------------------
+        // 6. VIEW: GET /Test/Session/{sessionId}/Question
+        // ----------------------------------------------------------------------
+
+        /// <summary>
+        /// Carica la vista della prima domanda per la sessione specificata.
+        /// </summary>
+        /// <param name="sessionId">L'ID della sessione utente.</param>
+        /// <param name="cancellationToken">Token per annullare l'operazione.</param>
+        /// <returns>La vista della domanda con il QuestionDto, o un errore 404.</returns>
+        [HttpGet("Session/{sessionId}/Question")]
+        public async Task<IActionResult> Question(string sessionId, CancellationToken cancellationToken)
+        {
+            // 1. Recupera la sessione utente
+            var session = await _sessionRepository.GetSessionByIdAsync(sessionId, cancellationToken);
+
+            if (session == null)
+            {
+                // Sessione non trovata
+                return NotFound($"Session with ID '{sessionId}' not found.");
+            }
+
+            // 2. Controlla se il test è già finito (opzionale, ma buona pratica)
+            if (session.EndTime.HasValue)
+            {
+                return RedirectToAction("Result", new { sessionId });
+            }
+
+            // 3. Recupera tutte le domande per il TestId della sessione
+            // Le domande devono essere ordinate per consistenza (ad es. per Text, come nel repository, o per un campo SequenceNumber se presente)
+            var allQuestions = await _testRepository.GetQuestionsByTestIdAsync(session.TestId, cancellationToken);
+
+            if (allQuestions == null || !allQuestions.Any())
+            {
+                return NotFound($"Test with ID '{session.TestId}' found, but no questions are available.");
+            }
+
+            // 4. Determina quale domanda visualizzare
+            // Per la prima domanda, prendiamo la prima domanda nell'elenco ordinato (corrisponde all'indice 0)
+            var currentQuestionIndex = session.Answers.Count; // Indice basato su quante risposte sono state date
+            var questionToShow = allQuestions.ElementAtOrDefault(currentQuestionIndex);
+
+            if (questionToShow == null)
+            {
+                // Se non ci sono più domande, reindirizza al risultato
+                await FinalizeSession(session);
+                return RedirectToAction("Result", new { sessionId });
+            }
+
+            // 5. Mappa la domanda al DTO (QuestionDto) per nascondere la risposta corretta
+            var questionDto = MapToQuestionDto(
+                questionToShow,
+                currentQuestionIndex + 1, // La sequenza è 1-based
+                allQuestions.Count
+            );
+
+            // 6. Restituisci la View con il DTO come Model
+            return View(questionDto);
         }
 
         // ----------------------------------------------------------------------

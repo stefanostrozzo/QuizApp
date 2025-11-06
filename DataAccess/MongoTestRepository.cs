@@ -2,10 +2,12 @@
 
 using MongoDB.Driver;
 using Quiz_Task.Models;
+using System; // Aggiungi questo using per Console
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 
 namespace Quiz_Task.DataAccess
 {
@@ -21,21 +23,27 @@ namespace Quiz_Task.DataAccess
         /// Initializes the repository and DB connection.
         /// </summary>
         /// <param name="settings">The MongoDbSettings object provided by DI.</param>
-        public MongoTestRepository(MongoDbSettings settings) // Modificato per accettare MongoDbSettings
+        public MongoTestRepository(MongoDbSettings settings)
         {
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
 
-            // Initialize collections
-            _testsCollection = database.GetCollection<Test>("Tests");
-            _questionsCollection = database.GetCollection<Question>("Questions");
+            // Initialize collections - usa i nomi corretti dalle settings
+            _testsCollection = database.GetCollection<Test>(settings.TestsCollectionName);
+            _questionsCollection = database.GetCollection<Question>(settings.QuestionsCollectionName);
 
-            // --- BEST PRACTICE: Create Indexes for optimal queries (as per project requirement) ---
-
-            // Index to efficiently retrieve questions by TestId, which is frequently queried.
-            // This is crucial since "the database will 'grow' very large over time."
-            var indexKeysTestId = Builders<Question>.IndexKeys.Ascending(q => q.TestId);
-            _questionsCollection.Indexes.CreateOne(new CreateIndexModel<Question>(indexKeysTestId));
+            // --- BEST PRACTICE: Create Indexes for optimal queries ---
+            try
+            {
+                var indexKeysTestId = Builders<Question>.IndexKeys.Ascending(q => q.TestId);
+                _questionsCollection.Indexes.CreateOne(new CreateIndexModel<Question>(indexKeysTestId));
+                Console.WriteLine("✅ Index created successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Index creation warning: {ex.Message}");
+                // Non blocchiamo l'app se l'indice esiste già
+            }
         }
 
         /// <summary>
@@ -54,10 +62,18 @@ namespace Quiz_Task.DataAccess
         /// </summary>
         public async Task<IReadOnlyList<Question>> GetQuestionsByTestIdAsync(string testId, CancellationToken cancellationToken = default)
         {
-            var questions = await _questionsCollection.Find(q => q.TestId == testId)
-                                                      .ToListAsync(cancellationToken);
-
-            return questions.OrderBy(q => q.Text).ToList().AsReadOnly();
+            try
+            {
+                // Converti la stringa in ObjectId per il confronto
+                var objectId = new ObjectId(testId);
+                return await _questionsCollection.Find(q => q.TestId.Equals(testId)).ToListAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Se la conversione fallisce, prova come stringa
+                Console.WriteLine($"Error converting TestId {testId}: {ex.Message}");
+                return await _questionsCollection.Find(q => q.TestId.ToString() == testId).ToListAsync(cancellationToken);
+            }
         }
 
         /// <summary>
@@ -65,8 +81,23 @@ namespace Quiz_Task.DataAccess
         /// </summary>
         public async Task<Question?> GetQuestionByIdAsync(string questionId, CancellationToken cancellationToken = default)
         {
-            // FirstOrDefaultAsync returns the document or null if not found (handling C# Nullable Reference Types).
-            return await _questionsCollection.Find(q => q.Id == questionId).FirstOrDefaultAsync(cancellationToken);
+            try
+            {
+                Console.WriteLine($"🔍 Looking for question with ID: {questionId}");
+
+                var question = await _questionsCollection
+                    .Find(q => q.Id == questionId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                Console.WriteLine($"✅ Question found: {question != null}");
+
+                return question;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error retrieving question {questionId}: {ex.Message}");
+                return null;
+            }
         }
     }
 }

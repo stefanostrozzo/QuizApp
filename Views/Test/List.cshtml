@@ -5,34 +5,160 @@
     ViewData["Title"] = "Quiz List (Homepage)";
 }
 
-<h1>Quiz Task - Homepage</h1>
-<h2>Enter your name and choose a test</h2>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-<form id="start-form">
-    <div>
-        <label for="username">Enter your name:</label>
-        <input type="text" id="username" name="username" required>
-        <div id="username-error" style="color: red; display: none;">User name is required.</div>
+    body {
+        background: linear-gradient(135deg, #D3D3D3 0%, #2575fc 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .quiz-container {
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 500px;
+        padding: 40px 30px;
+        text-align: center;
+    }
+
+    .quiz-header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .quiz-header h2 {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+        text-align: left;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #444;
+    }
+
+    input[type="text"],
+    select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e1e5ee;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #4d7cfe;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(77, 124, 254, 0.1);
+        }
+
+    .error-message {
+        color: #e74c3c;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    .btn-start {
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 14px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 117, 252, 0.4);
+        }
+
+        .btn-start:active {
+            transform: translateY(0);
+        }
+
+    .quiz-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #6a11cb;
+    }
+
+    @@media (max-width: 576px) {
+        .quiz-container {
+            padding: 30px 20px;
+        }
+
+        .quiz-header h1 {
+            font-size: 24px;
+        }
+
+        .quiz-header h2 {
+            font-size: 16px;
+        }
+    }
+</style>
+
+<div class="quiz-container">
+    <div class="quiz-header">
+        <div class="quiz-icon">❓</div>
+        <h1>Quiz Task</h1>
+        <h2>Enter your name and choose a test</h2>
     </div>
 
-    <div>
-        <label for="test-select">Choose a test:</label>
-        <select id="test-select" name="testId" required>
-            <option value="">-- Select a Test --</option>
-            @* Iterate over the Model (the list of tests passed from the controller) *@
-            @foreach (var test in Model)
-            {
-                <option value="@test.Id">@test.Title (@test.TotalQuestions questions)</option>
-            }
-        </select>
-        <div id="test-error" style="color: red; display: none;">A test must be selected.</div>
-    </div>
+    <form id="start-form">
+        <div class="form-group">
+            <label for="username">Enter your name:</label>
+            <input type="text" id="username" name="username" placeholder="Your name here" required>
+            <div id="username-error" class="error-message">User name is required.</div>
+        </div>
 
-    <button type="submit">Start</button>
-</form>
+        <div class="form-group">
+            <label for="test-select">Choose a test:</label>
+            <select id="test-select" name="testId" required>
+                <option value="">-- Select a Test --</option>
+                @* Iterate over the Model (the list of tests passed from the controller) *@
+                @foreach (var test in Model)
+                {
+                    <option value="@test.Id">@test.Title (@test.TotalQuestions questions)</option>
+                }
+            </select>
+            <div id="test-error" class="error-message">A test must be selected.</div>
+        </div>
 
-@* --- The JavaScript part to handle form submission and API calls --- *
-@* This JS must call your POST /api/test/start-session endpoint *@
+        <button type="submit" class="btn-start">Start Quiz</button>
+    </form>
+</div>
+
 <script>
     document.getElementById('start-form').addEventListener('submit', async function(event) {
         event.preventDefault(); // Stop default form submission
@@ -58,9 +184,15 @@
 
         if (!isValid) return;
 
+        // Show loading state
+        const submitButton = document.querySelector('.btn-start');
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Starting...';
+        submitButton.disabled = true;
+
         // API Call to POST /test/start-session
         try {
-            const response = await fetch('/api/test/start-session', { // Assumes you kept the /api/ prefix for the POST
+            const response = await fetch('/Test/start-session', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -68,20 +200,50 @@
                 body: JSON.stringify({ userName: username, testId: testId })
             });
 
-            const result = await response.json();
+            // 1. Legge la risposta JSON completa
+            const rawResult = await response.json();
 
-            if (response.ok && result.success) {
+            // 2. CORREZIONE: Estrae l'oggetto di risposta effettivo dal campo 'value'
+            //    Questo gestisce l'incapsulamento di IActionResult (rawResult.value)
+            //    o il payload diretto in caso di risposte senza wrapper.
+            const result = rawResult.value || rawResult;
+
+            // 3. Controlla il successo sul payload effettivo
+            if (response.ok && result && result.success) {
                 const sessionId = result.data;
                 // SUCCESS: Redirect the user to the first question view
-                // NOTE: The 'question' part of the URL assumes you'll build a question view later.
                 window.location.href = `/test/session/${sessionId}/question`;
             } else {
                 // Handle API error messages
-                alert('Failed to start session: ' + result.message);
+                // Usa il messaggio d'errore del payload o un fallback
+                const errorMessage = (result && result.message)
+                    ? result.message
+                    : 'An unknown error occurred on the server.';
+                alert('Failed to start session: ' + errorMessage);
             }
         } catch (error) {
             console.error('Network or system error:', error);
             alert('An unexpected error occurred while starting the session.');
+        } finally {
+            // Restore button state
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
         }
+    });
+
+    // Add some interactivity to form elements
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input, select');
+
+        inputs.forEach(input => {
+            // Add focus effect
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
     });
 </script>
