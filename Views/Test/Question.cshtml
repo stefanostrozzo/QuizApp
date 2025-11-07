@@ -190,7 +190,7 @@
     </div>
     <div class="progress-text" id="progress-text">Question @Model.SequenceNumber of @Model.TotalQuestions</div>
 
-    <form id="answer-form" method="post" data-session-id="@ViewContext.RouteData.Values["sessionId"]"
+    <form id="question-form" method="post" data-session-id="@ViewContext.RouteData.Values["sessionId"]"
           data-question-id="@Model.Id"
           data-current-sequence="@Model.SequenceNumber"
           data-total-questions="@Model.TotalQuestions">
@@ -201,7 +201,7 @@
             @foreach (var option in Model.Options)
             {
                 <label class="option-card">
-                    <input type="radio" name="selectedOptionId" value="@option.Id" required>
+                    <input type="radio" name="SelectedOptionId" value="@option.Id" required>
                     <span>@option.Text</span>
                 </label>
             }
@@ -209,157 +209,93 @@
 
         <div id="option-error">Please select an answer before continuing.</div>
 
-        <button type="submit" class="btn-submit" id="submit-answer-btn">Next Question</button>
+        <button type="submit" class="btn-submit" id="submit-answer-button">Next Question</button>
     </form>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const answerForm = document.getElementById('answer-form');
-        const submitButton = document.getElementById('submit-answer-btn');
-        const errorDiv = document.getElementById('option-error');
-
-        // Funzione per aggiornare la barra di progresso
-        function updateProgressBar(sequence, total) {
-            const progressBar = document.getElementById('progress-bar-fill');
-            const progressText = document.getElementById('progress-text');
-
-            if (progressBar && progressText && total > 0) {
-                // Calcola la percentuale di avanzamento
-                // Usiamo (sequence - 1) per il progresso VISIVO,
-                // ma manteniamo 'sequence' per la text. Manteniamo la logica originale.
-                const percentage = (sequence / total) * 100;
-                progressBar.style.width = percentage + '%';
-                progressText.textContent = `Question ${sequence} of ${total}`;
-            }
-        }
-
-        // Recupera i dati dal modello Razor
-        const currentSequence = parseInt(answerForm.getAttribute('data-current-sequence') || '0');
-        const totalQuestions = parseInt(answerForm.getAttribute('data-total-questions') || '0');
-        const sessionId = answerForm.getAttribute('data-session-id');
-
-        // Inizializza la barra di progresso all'avvio della pagina
-        updateProgressBar(currentSequence, totalQuestions);
-
-        // Aggiungi interattività alle opzioni
-        const optionCards = document.querySelectorAll('.option-card');
-        optionCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const radio = this.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-
-                    // Rimuovi lo stile selezionato da tutte le card
-                    optionCards.forEach(c => {
-                        c.style.borderColor = '#e1e5ee';
-                        c.style.backgroundColor = '#f8f9fa';
-                    });
-
-                    // Applica lo stile selezionato alla card corrente
-                    this.style.borderColor = '#6a11cb';
-                    this.style.backgroundColor = '#f0f4ff';
-
-                    // Nascondi l'errore se visibile
-                    errorDiv.style.display = 'none';
-                }
-            });
-        });
-
-            answerForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        // 1. VALIDAZIONE: Controlla se è stata selezionata un'opzione
-        const selectedOption = document.querySelector('input[name="selectedOptionId"]:checked');
-        if (!selectedOption) {
-            errorDiv.style.display = 'block';
-            return;
-        } else {
-            errorDiv.style.display = 'none';
-        }
-
-        // Disabilita il bottone e mostra lo stato di caricamento
+        // Find main elements
+        const form = document.getElementById('question-form');
+        const submitButton = document.getElementById('submit-answer-button');
         const originalText = submitButton.textContent;
-        submitButton.textContent = 'Submitting...';
-        submitButton.disabled = true;
 
-        // Prepara i dati da inviare
-        const questionId = answerForm.getAttribute('data-question-id');
-        const selectedOptionId = selectedOption.value;
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-        console.log('Submitting answer:', { sessionId, questionId, selectedOptionId });
+            // Get selected radio button
+            const selectedOption = document.querySelector('input[name="SelectedOptionId"]:checked');
 
-        try {
-            // 2. CHIAMATA API: POST /Test/SubmitAnswer
-            const response = await fetch('/Test/SubmitAnswer', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    sessionId: sessionId,
-                    questionId: questionId,
-                    selectedOptionId: selectedOptionId
-                })
-            });
-
-            const responseText = await response.text();
-            console.log('Raw response:', responseText);
-
-            let result;
-            if (responseText) {
-                try {
-                    result = JSON.parse(responseText);
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    throw new Error('Invalid response from server');
-                }
-            } else {
-                throw new Error('Empty response from server');
+            // Client-side validation
+            if (!selectedOption) {
+                alert('Please select an answer option.');
+                return;
             }
 
-            // CORREZIONE 1: Usa 'result' direttamente, in quanto il JSON non è annidato in '.value'.
-            const apiResult = result;
+            // Disable button and show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
 
-            if (response.ok && apiResult && apiResult.success) {
-                // Successo: Ottiene la prossima azione dal campo 'data' interno
-                const nextStep = apiResult.data;
-                console.log('Next step:', nextStep);
+            // Extract IDs from hidden fields and selected option
+            const sessionId = form.getAttribute('data-session-id');
+            const questionId = document.getElementById('questionId').value;
 
-                if (nextStep === 'RESULT') {
-                    // FINE DEL TEST: Reindirizza alla pagina dei risultati
-                    console.log('Redirecting to results page');
-                    window.location.href = `/Test/Result?sessionId=${sessionId}`;
+            const data = {
+                QuestionId: questionId,
+                SelectedOptionId: selectedOption.value
+            };
+
+            try {
+                const response = await fetch(`/Test/Session/${sessionId}/answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const apiResult = await response.json();
+
+                if (apiResult.success) {
+                    const nextId = apiResult.data;
+
+                    // The next ID can be the next Question ID or the Session ID if the quiz is completed
+                    const isQuizCompleted = apiResult.message.includes('Quiz completed');
+
+                    if (isQuizCompleted) {
+                        // All questions answered: redirect to result view
+                        window.location.href = `/Test/Session/${sessionId}/result`;
+                    } else {
+                        // Redirect to the next 
+                        const nextQuestionId = nextId; // nextId is the next Question ID
+                        console.log(nextQuestionId);
+                        window.location.href = `/Test/Session/${sessionId}/question/${nextQuestionId}`;
+                    }
+
                 } else {
-                    // CORREZIONE 2: Reindirizza alla rotta Question senza l'ID della domanda.
-                    // Il controller trova la prossima domanda in base al conteggio delle risposte.
-                    console.log('Redirecting to next question');
-                    window.location.href = `/Test/Session/${sessionId}/Question`;
+                    // Handle API errors (Use apiResult for the correct message)
+                    const errorMessage = (apiResult && apiResult.message)
+                        ? apiResult.message
+                        : 'An unknown error occurred.';
+
+                    alert('Failed to submit answer: ' + errorMessage);
+
+                    // Restore button state in case of an API error
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
                 }
 
-            } else {
-                // Gestione degli errori API
-                const errorMessage = (apiResult && apiResult.message)
-                    ? apiResult.message
-                    : 'An unknown error occurred.';
-                console.error('API Error:', errorMessage);
-                alert('Failed to submit answer: ' + errorMessage);
-                // Ripristina il bottone in caso di errore
+            } catch (error) {
+                // Network or system error handling (console.error removed for production)
+                alert('An unexpected error occurred while submitting the answer: ' + error.message);
+
+                // Restore button state in case of a network error
                 submitButton.textContent = originalText;
                 submitButton.disabled = false;
             }
+        });
 
-        } catch (error) {
-            console.error('Network or system error:', error);
-            alert('An unexpected error occurred while submitting the answer: ' + error.message);
-            // Ripristina il bottone in caso di errore
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-        }
-    });
-
-        // Aggiungi alcuni effetti di focus per accessibilità
+        // Add focus effects for accessibility and better UX
         const radioInputs = document.querySelectorAll('input[type="radio"]');
         radioInputs.forEach(input => {
             input.addEventListener('focus', function() {

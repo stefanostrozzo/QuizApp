@@ -135,16 +135,16 @@
         <h2>Enter your name and choose a test</h2>
     </div>
 
-    <form id="start-form">
+    <form id="start-session-form">
         <div class="form-group">
-            <label for="username">Enter your name:</label>
-            <input type="text" id="username" name="username" placeholder="Your name here" required>
-            <div id="username-error" class="error-message">User name is required.</div>
+            <label for="UserName">Enter your name:</label>
+            <input type="text" id="UserName" name="UserName" placeholder="Your name here" required>
+            <div id="UserName-error" class="error-message">User name is required.</div>
         </div>
 
         <div class="form-group">
-            <label for="test-select">Choose a test:</label>
-            <select id="test-select" name="testId" required>
+            <label for="testId">Choose a test:</label>
+            <select id="testId" name="testId" required>
                 <option value="">-- Select a Test --</option>
                 @* Iterate over the Model (the list of tests passed from the controller) *@
                 @foreach (var test in Model)
@@ -155,94 +155,83 @@
             <div id="test-error" class="error-message">A test must be selected.</div>
         </div>
 
-        <button type="submit" class="btn-start">Start Quiz</button>
+        <button type="submit" id="start-quiz-button" class="btn-start">Start Quiz</button>
     </form>
 </div>
 
 <script>
-    document.getElementById('start-form').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Stop default form submission
-
-        const username = document.getElementById('username').value.trim();
-        const testId = document.getElementById('test-select').value;
-        let isValid = true;
-
-        // Basic client-side validation
-        if (!username) {
-            document.getElementById('username-error').style.display = 'block';
-            isValid = false;
-        } else {
-            document.getElementById('username-error').style.display = 'none';
-        }
-
-        if (!testId) {
-            document.getElementById('test-error').style.display = 'block';
-            isValid = false;
-        } else {
-            document.getElementById('test-error').style.display = 'none';
-        }
-
-        if (!isValid) return;
-
-        // Show loading state
-        const submitButton = document.querySelector('.btn-start');
-        const originalText = submitButton.textContent;
-        submitButton.textContent = 'Starting...';
-        submitButton.disabled = true;
-
-        // API Call to POST /test/start-session
-        try {
-            const response = await fetch('/Test/start-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userName: username, testId: testId })
-            });
-
-            // 1. Legge la risposta JSON completa
-            const rawResult = await response.json();
-
-            // 2. CORREZIONE: Estrae l'oggetto di risposta effettivo dal campo 'value'
-            //    Questo gestisce l'incapsulamento di IActionResult (rawResult.value)
-            //    o il payload diretto in caso di risposte senza wrapper.
-            const result = rawResult.value || rawResult;
-
-            // 3. Controlla il successo sul payload effettivo
-            if (response.ok && result && result.success) {
-                const sessionId = result.data;
-                // SUCCESS: Redirect the user to the first question view
-                window.location.href = `/test/session/${sessionId}/question`;
-            } else {
-                // Handle API error messages
-                // Usa il messaggio d'errore del payload o un fallback
-                const errorMessage = (result && result.message)
-                    ? result.message
-                    : 'An unknown error occurred on the server.';
-                alert('Failed to start session: ' + errorMessage);
-            }
-        } catch (error) {
-            console.error('Network or system error:', error);
-            alert('An unexpected error occurred while starting the session.');
-        } finally {
-            // Restore button state
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-        }
-    });
-
-    // Add some interactivity to form elements
     document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input, select');
+        // Find main elements
+        const form = document.getElementById('start-session-form');
+        const submitButton = document.getElementById('start-quiz-button');
+        const originalText = submitButton.textContent;
+        const testIdInput = document.getElementById('testId');
 
-        inputs.forEach(input => {
-            // Add focus effect
-            input.addEventListener('focus', function() {
-                this.parentElement.classList.add('focused');
-            });
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-            input.addEventListener('blur', function() {
-                this.parentElement.classList.remove('focused');
+            // Simple client-side validation for non-empty values
+            if (!document.getElementById('UserName').value || !testIdInput.value) {
+                alert('Please enter your name and select a test.');
+                return;
+            }
+
+            // Disable button and show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Starting...';
+
+            // Prepare data for the API call
+            const data = {
+                UserName: document.getElementById('UserName').value,
+                TestId: testIdInput.value
+            };
+
+            try {
+                const response = await fetch('/Test/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const sessionId = result.data;
+                    // SUCCESS: Redirect the user to the first question view
+                    window.location.href = `/test/session/${sessionId}/question`;
+                } else {
+                    // Handle API error messages
+                    // Use the error message from the payload or a fallback
+                    const errorMessage = (result && result.message)
+                        ? result.message
+                        : 'An unknown error occurred on the server.';
+                    alert('Failed to start session: ' + errorMessage);
+                }
+            } catch (error) {
+                // Network or system error handling (console.error removed for production)
+                alert('An unexpected error occurred while starting the session.');
+            } finally {
+                // Restore button state
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
+        });
+
+        // Add some interactivity to form elements
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, select');
+
+            inputs.forEach(input => {
+                // Add focus effect
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('focused');
+                });
             });
         });
     });

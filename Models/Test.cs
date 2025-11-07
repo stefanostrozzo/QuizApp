@@ -11,19 +11,19 @@ namespace Quiz_Task.Models
     public record Test
     {
         /// <summary>
-        /// ID del Test. Utilizzato come ID primario in MongoDB.
+        /// The ID of the Test. Used as the primary ID in MongoDB.
         /// </summary>
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; init; } = default!;
 
         /// <summary>
-        /// Titolo del Test.
+        /// Title of the Test.
         /// </summary>
         public string Title { get; init; } = default!;
 
         /// <summary>
-        /// Numero totale di domande nel test.
+        /// Total number of questions in the test.
         /// </summary>
         public int TotalQuestions { get; init; }
     }

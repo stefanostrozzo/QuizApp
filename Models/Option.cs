@@ -10,18 +10,18 @@ namespace Quiz_Task.Models
     public record Option
     {
         /// <summary>
-        /// ID dell'entità, utilizzato all'interno di una domanda.
+        /// ID of the entity, used within a question.
         /// </summary>
         [BsonElement("Id")]
         public string Id { get; init; } = string.Empty;
 
         /// <summary>
-        /// Testo dell'opzione di risposta.
+        /// The text of the answer option.
         /// </summary>
         public string Text { get; init; } = default!;
 
         /// <summary>
-        /// Booleano che indica se l'opzione è corretta.
+        /// Boolean value that indicates if the option is correct.
         /// </summary>
         public bool IsCorrect { get; init; }
     }

@@ -35,5 +35,13 @@ namespace Quiz_Task.DataAccess
         /// <param name="cancellationToken">Optional token to cancel the operation.</param>
         /// <returns>A task whose result contains the Question, or null if not found.</returns>
         Task<Question?> GetQuestionByIdAsync(string questionId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Method to retrieve a test by its ID asynchronously.
+        /// </summary>
+        /// <param name="testId">The ID of the test.</param>
+        /// <param name="cancellationToken">Optional token to cancel the operation.</param>
+        /// <returns>A task whose result contains the Test object, or null if not found.</returns>
+        Task<Test?> GetTestByIdAsync(string testId, CancellationToken cancellationToken = default);
     }
 }
