@@ -36,7 +36,11 @@ Follow these steps from the root directory of your project (where this `README.m
 
 This command compiles the .NET application inside Docker and creates the portable image named `quiz-task-app`.
 
+```sh
 docker build -t quiz-task-app .
+```
 
 To run the container with environment variables, use the following command template:
+```sh
 docker run -d -p 8080:8080 --name quiz-app-instance -e "DatabaseSettings__ConnectionString=mongodb+srv://your_user:your_password@your_cluster_url" -e "DatabaseSettings__DatabaseName=YourDatabaseName" quiz-task-app
+```
