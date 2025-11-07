@@ -1,0 +1,82 @@
+[{
+  "_id": {
+    "$oid": "690e4a08aa51f23c5d1f7303"
+  },
+  "UserName": "Stefano",
+  "TestId": "690d02ab367d470f905f8d5f",
+  "StartTime": {
+    "$date": "2025-11-07T19:35:36.802Z"
+  },
+  "EndTime": {
+    "$date": "2025-11-07T19:35:47.303Z"
+  },
+  "Score": 3,
+  "Answers": [
+    {
+      "QuestionId": "690d02c5367d470f905f8d63",
+      "SelectedOptionId": "GK_Q1_O1",
+      "IsCorrect": false
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d64",
+      "SelectedOptionId": "GK_Q2_O1",
+      "IsCorrect": false
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d65",
+      "SelectedOptionId": "GK_Q3_O2",
+      "IsCorrect": true
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d66",
+      "SelectedOptionId": "GK_Q4_O2",
+      "IsCorrect": true
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d67",
+      "SelectedOptionId": "GK_Q5_O2",
+      "IsCorrect": true
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "690e4c5ab245954b146a878c"
+  },
+  "UserName": "Stefano",
+  "TestId": "690d02ab367d470f905f8d5f",
+  "StartTime": {
+    "$date": "2025-11-07T19:45:30.209Z"
+  },
+  "EndTime": {
+    "$date": "2025-11-07T19:45:54.330Z"
+  },
+  "Score": 5,
+  "Answers": [
+    {
+      "QuestionId": "690d02c5367d470f905f8d63",
+      "SelectedOptionId": "GK_Q1_O2",
+      "IsCorrect": true
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d64",
+      "SelectedOptionId": "GK_Q2_O2",
+      "IsCorrect": true
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d65",
+      "SelectedOptionId": "GK_Q3_O2",
+      "IsCorrect": true
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d66",
+      "SelectedOptionId": "GK_Q4_O2",
+      "IsCorrect": true
+    },
+    {
+      "QuestionId": "690d02c5367d470f905f8d67",
+      "SelectedOptionId": "GK_Q5_O2",
+      "IsCorrect": true
+    }
+  ]
+}]
