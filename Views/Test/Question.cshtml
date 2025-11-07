@@ -266,102 +266,98 @@
             });
         });
 
-        answerForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+            answerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-            // 1. VALIDAZIONE: Controlla se è stata selezionata un'opzione
-            const selectedOption = document.querySelector('input[name="selectedOptionId"]:checked');
-            if (!selectedOption) {
-                errorDiv.style.display = 'block';
-                return;
+        // 1. VALIDAZIONE: Controlla se è stata selezionata un'opzione
+        const selectedOption = document.querySelector('input[name="selectedOptionId"]:checked');
+        if (!selectedOption) {
+            errorDiv.style.display = 'block';
+            return;
+        } else {
+            errorDiv.style.display = 'none';
+        }
+
+        // Disabilita il bottone e mostra lo stato di caricamento
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Submitting...';
+        submitButton.disabled = true;
+
+        // Prepara i dati da inviare
+        const questionId = answerForm.getAttribute('data-question-id');
+        const selectedOptionId = selectedOption.value;
+
+        console.log('Submitting answer:', { sessionId, questionId, selectedOptionId });
+
+        try {
+            // 2. CHIAMATA API: POST /Test/SubmitAnswer
+            const response = await fetch('/Test/SubmitAnswer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    questionId: questionId,
+                    selectedOptionId: selectedOptionId
+                })
+            });
+
+            const responseText = await response.text();
+            console.log('Raw response:', responseText);
+
+            let result;
+            if (responseText) {
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('Invalid response from server');
+                }
             } else {
-                errorDiv.style.display = 'none';
+                throw new Error('Empty response from server');
             }
 
-            // Disabilita il bottone e mostra lo stato di caricamento
-            const originalText = submitButton.textContent;
-            submitButton.textContent = 'Submitting...';
-            submitButton.disabled = true;
+            // CORREZIONE 1: Usa 'result' direttamente, in quanto il JSON non è annidato in '.value'.
+            const apiResult = result;
 
-            // Prepara i dati da inviare
-            const questionId = answerForm.getAttribute('data-question-id');
-            const selectedOptionId = selectedOption.value;
+            if (response.ok && apiResult && apiResult.success) {
+                // Successo: Ottiene la prossima azione dal campo 'data' interno
+                const nextStep = apiResult.data;
+                console.log('Next step:', nextStep);
 
-            console.log('Submitting answer:', { sessionId, questionId, selectedOptionId });
-
-            try {
-                // 2. CHIAMATA API: POST /Test/SubmitAnswer
-                const response = await fetch('/Test/SubmitAnswer', {
-                    // ... (metodo e headers invariati)
-                    body: JSON.stringify({
-                        sessionId: sessionId,
-                        questionId: questionId,
-                        selectedOptionId: selectedOptionId
-                    })
-                });
-
-                console.log('Response status:', response.status);
-
-                // Gestione della risposta
-                const responseText = await response.text();
-                console.log('Raw response:', responseText);
-
-                let result;
-                if (responseText) {
-                    try {
-                        result = JSON.parse(responseText);
-                    } catch (parseError) {
-                        console.error('JSON parse error:', parseError);
-                        throw new Error('Invalid response from server');
-                    }
+                if (nextStep === 'RESULT') {
+                    // FINE DEL TEST: Reindirizza alla pagina dei risultati
+                    console.log('Redirecting to results page');
+                    window.location.href = `/Test/Result?sessionId=${sessionId}`;
                 } else {
-                    throw new Error('Empty response from server');
+                    // CORREZIONE 2: Reindirizza alla rotta Question senza l'ID della domanda.
+                    // Il controller trova la prossima domanda in base al conteggio delle risposte.
+                    console.log('Redirecting to next question');
+                    window.location.href = `/Test/Session/${sessionId}/Question`;
                 }
 
-                // -------------------------------------------------------------------
-                // CORREZIONE FONDAMENTALE: Accedi all'oggetto annidato 'value'
-                // -------------------------------------------------------------------
-                const apiResult = result.value;
-
-                if (response.ok && apiResult && apiResult.success) {
-                    // Successo: Ottiene la prossima azione dal campo 'data' interno
-                    const nextStep = apiResult.data; // <--- nextStep ottiene l'ID o 'RESULT'
-                    console.log('Next step:', nextStep);
-
-                    if (nextStep === 'RESULT') {
-                        // 3a. FINE DEL TEST: Reindirizza alla pagina dei risultati
-                        console.log('Redirecting to results page');
-                        window.location.href = `/Test/Result?sessionId=${sessionId}`;
-                    } else {
-                        // 3b. PROSSIMA DOMANDA: Reindirizza alla view della prossima domanda
-                        console.log('Redirecting to next question');
-                        // Usa la variabile 'nextStep'
-                        window.location.href = `/Test/Session/${sessionId}/Question/${nextStep}`;
-                    }
-
-                } else {
-                    // Gestione degli errori API (Usa apiResult per il messaggio corretto)
-                    const errorMessage = (apiResult && apiResult.message)
-                        ? apiResult.message
-                        : 'An unknown error occurred.';
-
-                    console.error('API Error:', errorMessage);
-                    alert('Failed to submit answer: ' + errorMessage);
-
-                    // Ripristina il bottone in caso di errore
-                    submitButton.textContent = originalText;
-                    submitButton.disabled = false;
-                }
-
-            } catch (error) {
-                console.error('Network or system error:', error);
-                alert('An unexpected error occurred while submitting the answer: ' + error.message);
-
+            } else {
+                // Gestione degli errori API
+                const errorMessage = (apiResult && apiResult.message)
+                    ? apiResult.message
+                    : 'An unknown error occurred.';
+                console.error('API Error:', errorMessage);
+                alert('Failed to submit answer: ' + errorMessage);
                 // Ripristina il bottone in caso di errore
                 submitButton.textContent = originalText;
                 submitButton.disabled = false;
             }
-        });
+
+        } catch (error) {
+            console.error('Network or system error:', error);
+            alert('An unexpected error occurred while submitting the answer: ' + error.message);
+            // Ripristina il bottone in caso di errore
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
+        }
+    });
 
         // Aggiungi alcuni effetti di focus per accessibilità
         const radioInputs = document.querySelectorAll('input[type="radio"]');

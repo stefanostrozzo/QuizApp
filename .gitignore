@@ -1,4 +1,4 @@
 settings.json
-.vs/
-bin/
-obj/
+.vs/*
+bin/*
+obj/*
