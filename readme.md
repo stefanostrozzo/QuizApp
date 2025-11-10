@@ -44,3 +44,11 @@ To run the container with environment variables, use the following command templ
 ```sh
 docker run -d -p 8080:8080 --name quiz-app-instance -e "DatabaseSettings__ConnectionString=mongodb+srv://your_user:your_password@your_cluster_url" -e "DatabaseSettings__DatabaseName=YourDatabaseName" quiz-task-app
 ```
+
+
+Then on your browser go to:
+```sh
+localhost:8080/Test/list
+```
+
+If the application is on anorher machine replace <localhost> with the Ip addess of that machine
